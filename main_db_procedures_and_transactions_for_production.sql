@@ -152,6 +152,9 @@ BEGIN TRANSACTION
 			ON dbo.pizza.id_pizza = dbo.pizza_ingredient.id_pizza
 		WHERE id_ingredient = @Par_id_ingredient;
 
+	UPDATE dbo.ingredient
+		SET price_ingredient = @Par_price_ingredient;
+
 IF(@@ERROR <> 0)
 	ROLLBACK TRANSACTION
 ELSE
