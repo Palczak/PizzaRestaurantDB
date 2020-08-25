@@ -50,7 +50,7 @@ GO
 
 EXECUTE dbo.addition_category_insert
 @Par_id_addition_category = 4,
-@Par_name_addition_category = "Side_dish";
+@Par_name_addition_category = "Side dish";
 GO
 
 ----pizza size, insert, update procedures and values
@@ -161,7 +161,7 @@ GO
 
 EXECUTE dbo.order_status_insert
 @Par_id_order_status = 4,
-@Par_name_order_status = "Delivered";
+@Par_name_order_status = "Completed";
 GO
 
 EXECUTE dbo.order_status_insert

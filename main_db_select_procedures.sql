@@ -1,4 +1,4 @@
-CREATE PROCEDURE dbo.select_all_active_pizza
+CREATE PROCEDURE dbo.pizza_select_all_active
 AS
 BEGIN
 	DECLARE @Var_multiplier_medium decimal(3,2);
@@ -13,7 +13,7 @@ BEGIN
 END;
 GO
 
-CREATE PROCEDURE dbo.select_ingredients_id_name_from_pizza
+CREATE PROCEDURE dbo.pizza_select_indiegrents
 @Par_id_pizza int
 AS
 BEGIN
@@ -26,7 +26,7 @@ BEGIN
 END;
 GO
 
-CREATE PROCEDURE dbo.select_pizza_igredient_name_by_id
+CREATE PROCEDURE dbo.pizza_select_indiegrents_name
 @Par_id_pizza int
 AS
 BEGIN
@@ -36,7 +36,7 @@ BEGIN
 END;
 GO
 
-CREATE PROCEDURE dbo.select_deliverer_daily_income
+CREATE PROCEDURE dbo.deliverer_select_daily_income
 @Par_id_deliverer int,
 @Par_date date
 AS
@@ -64,3 +64,52 @@ BEGIN
 
 END;
 GO
+
+CREATE PROCEDURE dbo.deliverer_select_active
+@Par_id_deliverer int
+AS
+BEGIN
+
+	IF(@Par_id_deliverer IS NOT NULL)
+	BEGIN
+		SELECT name_deliverer, second_name_deliverer, phone_deliverer
+		FROM dbo.deliverer
+		WHERE dbo.deliverer.id_deliverer = @Par_id_deliverer AND active_deliverer = 1
+	END
+	ELSE
+	BEGIN
+		SELECT name_deliverer, second_name_deliverer, phone_deliverer
+		FROM dbo.deliverer
+		WHERE active_deliverer = 1
+	END
+
+END;
+GO
+
+CREATE PROCEDURE dbo.addition_select_all_active
+AS
+BEGIN
+	DECLARE @Var_multiplier_medium decimal(3,2);
+	DECLARE @Var_multiplier_large decimal(3,2);
+	SET @Var_multiplier_medium = (SELECT multiplier FROM dbo.pizza_size WHERE id_pizza_size = 2);
+	SET @Var_multiplier_large = (SELECT multiplier FROM dbo.pizza_size WHERE id_pizza_size = 3);
+
+	SELECT id_addition, name_addition_category, name_addition, price_addition
+	FROM dbo.addition
+	INNER JOIN dbo.addition_category ON dbo.addition.id_addition_category = dbo.addition_category.id_addition_category
+	WHERE (active_addition = 1);
+END;
+
+CREATE PROCEDURE dbo.pizza_sum_income
+@Par_minimum_income smallmoney = 0
+AS
+BEGIN
+
+	SELECT name_pizza, SUM(price_order_pizza) AS [income_pizza]
+	FROM dbo.pizza
+	INNER JOIN dbo.order_pizza
+	ON dbo.order_pizza.id_pizza = dbo.pizza.id_pizza
+	GROUP BY name_pizza
+	HAVING SUM(price_order_pizza) >= @Par_minimum_income;
+
+END;

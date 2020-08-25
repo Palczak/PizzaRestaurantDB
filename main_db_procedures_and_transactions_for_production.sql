@@ -509,16 +509,21 @@ AS
 BEGIN
 	DECLARE @Var_price_purchase_order smallmoney;
 	DECLARE @Var_tmp_sum smallmoney;
+	SET @Var_price_purchase_order = 0;
+
 
 	SET @Var_tmp_sum = (SELECT SUM(price_order_pizza) FROM dbo.order_pizza WHERE id_purchase_order = @Par_id_purchase_order);
+	IF(@Var_tmp_sum IS NULL)
+		SET @Var_tmp_sum = 0;
 	SET @Var_price_purchase_order += @Var_tmp_sum;
 
 	SET @Var_tmp_sum = (SELECT SUM(price_order_addition) FROM dbo.order_addition WHERE id_purchase_order = @Par_id_purchase_order);
+	IF(@Var_tmp_sum IS NULL)
+		SET @Var_tmp_sum = 0;
 	SET @Var_price_purchase_order += @Var_tmp_sum;
 
 	UPDATE dbo.purchase_order
-	SET price_purchase_order = @Par_id_purchase_order
+	SET price_purchase_order = @Var_price_purchase_order
 	WHERE id_purchase_order = @Par_id_purchase_order;
-
 END;
 GO
