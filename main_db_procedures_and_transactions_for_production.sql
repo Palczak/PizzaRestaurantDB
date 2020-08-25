@@ -1,16 +1,5 @@
 ----deliverer delete, insert, update procedures -------------------------------------------------
 
-/*
-CREATE PROCEDURE dbo.delete_permanent_deliverer
-@Par_id_deliverer int
-AS
-BEGIN
-DELETE dbo.deliverer
-WHERE id_deliverer = @Par_id_deliverer;
-END;
-GO
-*/
-
 CREATE PROCEDURE dbo.deliverer_delete
 @Par_id_deliverer int
 AS
@@ -50,19 +39,6 @@ BEGIN
 	WHERE id_deliverer = @Par_id_deliverer;
 END;
 GO
-
-----addition delete, insert, update procedures
-
-/*
-CREATE PROCEDURE dbo.addition_delete_permanent
-@Par_id_addition int
-AS
-BEGIN
-DELETE dbo.addition
-WHERE id_addition = @Par_id_addition;
-END;
-GO
-*/
 
 CREATE PROCEDURE dbo.addition_delete
 @Par_id_addition int
@@ -104,29 +80,43 @@ BEGIN
 END;
 GO
 
-----ingredient delete, insert, update procedures
-/*
-CREATE PROCEDURE dbo.ingredient_delete_permanent
-@Par_id_ingredient int
-AS
-BEGIN
-DELETE dbo.ingredient
-WHERE id_ingredient = @Par_id_ingredient;
-END;
-GO
-*/
-
 CREATE PROCEDURE dbo.ingredient_delete
 @Par_id_ingredient int
 AS
 BEGIN
+-----TRANSACTION-----
+SET XACT_ABORT ON;
+BEGIN TRANSACTION
+
 	UPDATE dbo.ingredient
 	SET
 		active_ingredient = 0
 	WHERE id_ingredient = @Par_id_ingredient;
+
+	DECLARE @Var_price_ingredient smallmoney;
+
+	SELECT @Var_price_ingredient = price_ingredient
+		FROM dbo.ingredient
+		WHERE id_ingredient = @Par_id_ingredient;
+
+	UPDATE dbo.pizza
+		SET price_pizza = price_pizza -	@Var_price_ingredient
+		FROM dbo.pizza
+		INNER JOIN dbo.pizza_ingredient
+			ON dbo.pizza.id_pizza = dbo.pizza_ingredient.id_pizza
+		WHERE id_ingredient = @Par_id_ingredient;
+
+	UPDATE dbo.pizza_ingredient
+		SET active_pizza_ingredient = 0
+		WHERE id_ingredient = @Par_id_ingredient;
+
+
+IF(@@ERROR <> 0)
+	ROLLBACK TRANSACTION
+ELSE
+	COMMIT TRANSACTION
 END;
 GO
-
 
 CREATE PROCEDURE dbo.ingredient_insert
 @Par_name_ingredient varchar(50),
@@ -140,16 +130,43 @@ BEGIN
 END;
 GO
 
-CREATE PROCEDURE dbo.ingredient_update
+CREATE PROCEDURE dbo.ingredient_price_change
 @Par_id_ingredient int,
-@Par_name_ingredient varchar(50),
 @Par_price_ingredient smallmoney
+AS
+BEGIN
+-----TRANSACTION-----
+SET XACT_ABORT ON;
+BEGIN TRANSACTION
+
+	DECLARE @Var_old_price_ingredient smallmoney;
+
+	SELECT @Var_old_price_ingredient = price_ingredient
+		FROM dbo.ingredient
+		WHERE id_ingredient = @Par_id_ingredient;
+
+	UPDATE dbo.pizza
+		SET price_pizza = price_pizza -	@Var_old_price_ingredient + @Par_price_ingredient
+		FROM dbo.pizza
+		INNER JOIN dbo.pizza_ingredient
+			ON dbo.pizza.id_pizza = dbo.pizza_ingredient.id_pizza
+		WHERE id_ingredient = @Par_id_ingredient;
+
+IF(@@ERROR <> 0)
+	ROLLBACK TRANSACTION
+ELSE
+	COMMIT TRANSACTION
+END;
+GO
+
+CREATE PROCEDURE dbo.ingredient_rename
+@Par_id_ingredient int,
+@Par_name_ingredient varchar(50)
 AS
 BEGIN
 	UPDATE dbo.ingredient
 	SET
-		name_ingredient = @Par_name_ingredient,
-		price_ingredient =  @Par_price_ingredient
+		name_ingredient = @Par_name_ingredient
 	WHERE id_ingredient = @Par_id_ingredient;
 END;
 GO
@@ -289,6 +306,41 @@ GO
 
 
 ----pizza ingredient delete, insert, update procedures
+
+CREATE PROCEDURE dbo.pizza_ingredient_delete
+@Par_id_pizza_ingredient int
+AS
+BEGIN
+-----------------------------------------------------TRANSACTION------------------------------------------
+SET XACT_ABORT ON;
+BEGIN TRANSACTION
+
+	DECLARE @Var_price_pizza smallmoney;
+	DECLARE @Var_id_pizza int;
+	DECLARE @Var_id_ingredient int;
+
+	SET @Var_id_pizza = (SELECT id_pizza FROM dbo.pizza_ingredient WHERE id_pizza_ingredient = @Par_id_pizza_ingredient);
+	SET @Var_id_ingredient = (SELECT id_ingredient FROM dbo.pizza_ingredient WHERE id_pizza_ingredient = @Par_id_pizza_ingredient);
+
+	SET @Var_price_pizza = (SELECT price_pizza FROM dbo.pizza WHERE id_pizza = @Var_id_pizza);
+	SET @Var_price_pizza -= (SELECT price_ingredient FROM dbo.ingredient WHERE id_ingredient = @Var_id_ingredient);
+
+	UPDATE dbo.pizza
+	SET
+		price_pizza = @Var_price_pizza
+	WHERE id_pizza = @Var_id_pizza;
+
+	UPDATE dbo.pizza_ingredient
+	SET active_pizza_ingredient = 0
+	WHERE id_pizza_ingredient = @Par_id_pizza_ingredient;
+
+IF(@@ERROR <> 0)
+	ROLLBACK TRANSACTION
+ELSE
+	COMMIT TRANSACTION
+
+END;
+GO
 
 CREATE PROCEDURE dbo.pizza_ingredient_delete_permanent
 @Par_id_pizza_ingredient int
