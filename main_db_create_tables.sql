@@ -110,7 +110,7 @@ CREATE TABLE dbo.purchase_order
 	note varchar(500) NULL,
 	phone_client varchar(20) NULL,
 	id_order_status int NOT NULL,
-	date_purchase_order date NOT NULL,
+	date_purchase_order smalldatetime NOT NULL,
 	town varchar(50) NULL,
 	street varchar(50) NULL,
 	residence varchar(10) NULL,
