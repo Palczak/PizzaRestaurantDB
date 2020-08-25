@@ -343,7 +343,6 @@ ALTER TABLE dbo.purchase_order
 ADD CONSTRAINT CK_purchase_order_client_phone
 CHECK ((phone_client like '+[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]') or (phone_client like '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'));
 GO
-
 --default values
 
 ALTER TABLE dbo.addition
